@@ -47,7 +47,7 @@ class TelaLogin(ft.Container):
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT senha_user, cargo FROM dimUsuarios WHERE email_user = ?
-            ''', (self.email.value))
+            ''', (self.email.value,))
 
             resultado = cursor.fetchone()
 

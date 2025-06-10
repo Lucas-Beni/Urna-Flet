@@ -2,9 +2,13 @@ import flet as ft
 import sqlite3 as sql
 from screens.tela_cadastro import TelaCadastro
 from screens.tela_login import TelaLogin
+from screens.tela_inicio_adm import TelaInicioAdm
+from screens.tela_cadastro_m import TelaCadastroM
 
 conn = sql.connect('urna.db')
 cursor = conn.cursor()
+
+cursor.execute("PRAGMA foreign_keys = ON")
 
 # Cria a tabela se não existir
 cursor.execute('''
@@ -15,6 +19,51 @@ cursor.execute('''
         email_user TEXT UNIQUE NOT NULL,
         senha_user TEXT NOT NULL,
         cargo TEXT NOT NULL CHECK(cargo IN ('adm', 'user'))
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS dimGeneros(
+        id_genero INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_genero TEXT NOT NULL
+    )
+''')
+
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS dimMusicas(
+        id_musica INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_musica TEXT NOT NULL,
+        id_genero INTEGER NOT NULL,
+        FOREIGN KEY(id_genero) REFERENCES dimGeneros(id_genero)
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS dimAutores(
+        id_autor INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome_autor TEXT NOT NULL
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS factAutorMusica(
+        id_relacao INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_autor INTEGER NOT NULL,
+        id_musica INTEGER NOT NULL,
+        FOREIGN KEY(id_autor) REFERENCES dimAutores(id_autor),
+        FOREIGN KEY(id_musica) REFERENCES dimMusicas(id_musica)
+    )
+''')
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS factVotos(
+        id_voto INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_user INTEGER NOT NULL,
+        id_musica INTEGER NOT NULL,
+        data_voto TEXT NOT NULL,
+        FOREIGN KEY(id_user) REFERENCES dimUsuarios(id_user),
+        FOREIGN KEY(id_musica) REFERENCES dimMusicas(id_musica)
     )
 ''')
 
@@ -29,7 +78,7 @@ if existe_adm == 0:
     cursor.execute('''
         INSERT INTO dimUsuarios (nome_user, cpf_user, email_user, senha_user, cargo)
         VALUES (?, ?, ?, ?, ?)
-    ''', ('Administrador', '00000000000', 'adm@admin.com', 'admin', 'adm'))
+    ''', ('Administrador', '123', 'adm@admin.com', 'admin', 'adm'))
 
 conn.commit()
 conn.close()
@@ -57,7 +106,11 @@ def main(page: ft.Page):
 
     def abrir_adm():
         page.controls.clear()
-        page.add(ft.Text("Tela de Administração"))
+        page.add(TelaInicioAdm(abrir_voto, abrir_cadastro_m))
+    
+    def abrir_cadastro_m():
+        page.controls.clear()
+        page.add(TelaCadastroM())
 
     # Inicia na tela de login
     abrir_login()
