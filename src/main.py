@@ -25,7 +25,7 @@ cursor.execute('''
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS dimGeneros(
         id_genero INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome_genero TEXT NOT NULL
+        nome_genero TEXT UNIQUE NOT NULL
     )
 ''')
 

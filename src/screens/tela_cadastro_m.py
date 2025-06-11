@@ -38,23 +38,49 @@ class TelaCadastroM(ft.Container):
         try:
             conn = sql.connect('urna.db')
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO dimGeneros(nome_genero)
-                VALUES(?)
-            ''', (self.genero.value,))
-            conn.commit()
-            cursor.execute('''
-                SELECT id_genero FROM dimGeneros WHERE nome_genero = ?
-            ''', (self.genero.value,))
-
-            resultado = cursor.fetchone()[0]
 
             cursor.execute('''
-                INSERT INTO dimMusicas(nome_musica, id_genero)
-                VALUES(?,?)
-            ''', (self.nome_m.value,resultado))
-            conn.commit()
-            conn.close()
-            print("Usuário salvo!")
+                SELECT * FROM dimMusicas WHERE nome_musica = ?
+            ''', (self.nome_m.value.lower(),))
+            existe_m = cursor.fetchone()
+
+            if not existe_m:
+
+                cursor.execute('''
+                    SELECT * FROM dimGeneros WHERE nome_genero = ?
+                ''', (self.genero.value.lower(),))
+                existe_g = cursor.fetchone()
+
+                if not existe_g:
+                    cursor.execute('''
+                        INSERT INTO dimGeneros(nome_genero)
+                        VALUES(?)
+                    ''', (self.genero.value.lower(),))
+                    conn.commit()
+
+                cursor.execute('''
+                    SELECT id_genero FROM dimGeneros WHERE nome_genero = ?
+                ''', (self.genero.value.lower(),))
+                resultado = cursor.fetchone()[0]
+
+                cursor.execute('''
+                    INSERT INTO dimMusicas(nome_musica, id_genero)
+                    VALUES(?,?)
+                ''', (self.nome_m.value.lower(),resultado))
+
+                conn.commit()
+
+                cursor.execute('''
+                    INSERT INTO dimAutores(nome_autor)
+                    VALUES(?)
+                ''', (self.autor.value.lower(),))
+
+                conn.commit()
+                conn.close()
+                print("Musica cadastrada!")
+
+            else:
+                print("Música já cadastrada")
+
         except sql.IntegrityError:
             print("Erro: CPF ou e-mail já cadastrado.")
